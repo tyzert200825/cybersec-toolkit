@@ -84,3 +84,4 @@ manual_scripts/*
 
 # Local output from scripts/test-distros.sh
 test-distros-logs/
+elara_modules/data/*.json

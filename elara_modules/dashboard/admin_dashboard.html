@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elara SecOps — Standalone</title>
+<style>
+:root{--bg:#0a0e14;--card:#11161f;--hover:#1a2030;--border:#1e2733;--txt:#d4d4d4;--dim:#6b7280;--accent:#00d4aa;--accent2:#007a5e;--red:#ff4757;--orange:#ffa502;--blue:#54a0ff;--purple:#a55eea;--green:#2ed573}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'SF Mono','Fira Code',monospace;background:var(--bg);color:var(--txt);min-height:100vh}
+.err{color:var(--red);font-size:12px;margin-top:8px}
+#dash{display:block}
+.hdr{background:var(--card);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.hdr-l{display:flex;align-items:center;gap:16px}
+.hdr-l h1{color:var(--accent);font-size:18px}
+.hdr-r{display:flex;align-items:center;gap:12px}
+.badge{font-size:11px;padding:4px 8px;border-radius:4px;background:var(--accent2);color:var(--accent)}
+.btn-out{background:none;border:1px solid var(--border);color:var(--dim);padding:6px 12px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:12px}
+.btn-out:hover{border-color:var(--red);color:var(--red)}
+.tabs{display:flex;background:var(--card);border-bottom:1px solid var(--border);padding:0 24px;overflow-x:auto}
+.tab{padding:12px 20px;cursor:pointer;color:var(--dim);font-size:13px;border-bottom:2px solid transparent;white-space:nowrap}
+.tab:hover{color:var(--txt)}
+.tab.on{color:var(--accent);border-bottom-color:var(--accent)}
+.ctn{padding:24px;max-width:1400px;margin:0 auto}
+.pane{display:none}.pane.on{display:block}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px}
+.card-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.card-t{font-size:15px;font-weight:600}
+.card-s{font-size:12px;color:var(--dim)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px}
+.stat-v{font-size:28px;font-weight:bold}
+.stat-l{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-top:4px}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.pcard{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;cursor:pointer;transition:all .2s}
+.pcard:hover{border-color:var(--accent);background:var(--hover)}
+.pcard .pn{font-size:14px;font-weight:600;margin-bottom:6px}
+.pcard .pd{font-size:12px;color:var(--dim);margin-bottom:12px;line-height:1.4}
+.pcard .pc{font-size:10px;padding:2px 8px;border-radius:4px}
+.c-sh{background:rgba(0,212,170,.15);color:var(--accent)}
+.c-crypto{background:rgba(255,165,2,.15);color:var(--orange)}
+.c-recon{background:rgba(165,94,234,.15);color:var(--purple)}
+.c-all{background:rgba(255,71,87,.15);color:var(--red)}
+.btn{padding:8px 16px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--txt);cursor:pointer;font-family:inherit;font-size:12px}
+.btn:hover{border-color:var(--accent)}
+.btn-p{background:var(--accent);color:var(--bg);border-color:var(--accent);font-weight:bold}
+.btn-p:hover{background:var(--accent2)}
+.btn-d{border-color:var(--red);color:var(--red)}
+.btn-s{padding:4px 10px;font-size:11px}
+.btn:disabled{opacity:.5;cursor:wait}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);font-size:11px;text-transform:uppercase;color:var(--dim)}
+td{padding:10px 12px;border-bottom:1px solid var(--border);font-size:12px;vertical-align:top}
+tr:hover{background:var(--hover)}
+.sev{font-size:10px;padding:2px 8px;border-radius:4px;font-weight:bold}
+.s-critical{background:rgba(255,71,87,.2);color:var(--red)}
+.s-high{background:rgba(255,165,2,.2);color:var(--orange)}
+.s-medium{background:rgba(84,160,255,.2);color:var(--blue)}
+.s-low{background:rgba(107,114,128,.2);color:var(--dim)}
+.fbar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.fbar select,.fbar input{padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--txt);font-family:inherit;font-size:12px}
+.igrp{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.igrp input{flex:1;min-width:200px;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--txt);font-family:inherit;font-size:13px}
+.igrp input:focus{border-color:var(--accent);outline:none}
+.con{background:#000;border:1px solid var(--border);border-radius:8px;padding:12px;font-size:12px;max-height:500px;overflow-y:auto;white-space:pre-wrap;word-break:break-all}
+.cl{padding:2px 0}.cl.i{color:var(--blue)}.cl.ok{color:var(--accent)}.cl.err{color:var(--red)}.cl.warn{color:var(--orange)}.cl.dim{color:var(--dim)}
+.ovl{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;justify-content:center;align-items:center}
+.ovl.on{display:flex}
+.mdl{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;width:90%;max-width:700px;max-height:85vh;overflow-y:auto}
+.mdl-t{font-size:18px;color:var(--accent);margin-bottom:16px}
+.mdl-x{float:right;cursor:pointer;color:var(--dim);font-size:20px}.mdl-x:hover{color:var(--red)}
+.ms{margin-bottom:16px}
+.ms h4{font-size:12px;color:var(--dim);text-transform:uppercase;margin-bottom:6px}
+.ms p{font-size:13px;line-height:1.5}
+.secret{background:#000;padding:8px;border-radius:4px;font-size:12px;word-break:break-all;color:var(--accent);border:1px solid var(--border);white-space:pre-wrap}
+.spinner{display:inline-block;width:12px;height:12px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.r-out{background:#000;border:1px solid var(--border);border-radius:8px;padding:12px;font-size:12px;max-height:400px;overflow-y:auto;white-space:pre-wrap;word-break:break-all;line-height:1.4}
+.r-out .crit{color:var(--red)}.r-out .warn{color:var(--orange)}.r-out .ok{color:var(--green)}.r-out .info{color:var(--blue)}.r-out .dim{color:var(--dim)}
+::-webkit-scrollbar{width:8px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+@media(max-width:768px){.grid{grid-template-columns:1fr 1fr}.pgrid{grid-template-columns:1fr}.ctn{padding:12px}}
+</style>
+</head>
+<body>
+
+  </div>
+</div>
+
+<div id="dash">
+  <div class="hdr">
+    <div class="hdr-l"><h1>🔒 Elara SecOps</h1><span class="badge" id="srvStatus">● ONLINE</span></div>
+    <div class="hdr-r">
+      <span style="font-size:11px;color:var(--dim)" id="lr"></span>
+      <button class="btn btn-s" onclick="refresh()">↻ Refresh</button>
+      <button class="btn-out" onclick="location.reload()">Logout</button>
+    </div>
+  </div>
+  <div class="tabs">
+    <div class="tab on" onclick="tab(event,'find')">🔑 Findings</div>
+    <div class="tab" onclick="tab(event,'pipes')">⚡ Pipelines</div>
+    <div class="tab" onclick="tab(event,'recon')">🔍 Recon</div>
+    <div class="tab" onclick="tab(event,'con')">📋 Console</div>
+  </div>
+  <div class="ctn">
+
+    <!-- FINDINGS -->
+    <div class="pane on" id="p-find">
+      <div class="grid" id="fstats"></div>
+      <div class="fbar">
+        <select id="fsev" onchange="renderF()"><option value="">All Severities</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select>
+        <input type="text" id="fsrch" placeholder="Search repo, secret type, notes..." oninput="renderF()" style="flex:1;min-width:200px">
+        <button class="btn btn-s" onclick="exportF()">⬇ CSV</button>
+      </div>
+      <div class="card">
+        <div class="card-h"><div class="card-t">Security Findings</div><div class="card-s" id="fcount"></div></div>
+        <div style="overflow-x:auto"><table><thead><tr><th>Severity</th><th>Secret Type</th><th>Repository</th><th>Method</th><th>Verified</th><th>Date</th><th></th></tr></thead><tbody id="fbody"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- PIPELINES -->
+    <div class="pane" id="p-pipes">
+      <div class="grid">
+        <div class="stat"><div class="stat-v" style="color:var(--accent)" id="ptot">-</div><div class="stat-l">Total Findings</div></div>
+        <div class="stat"><div class="stat-v" style="color:var(--orange)" id="pchi">-</div><div class="stat-l">Critical/High</div></div>
+        <div class="stat"><div class="stat-v" style="color:var(--blue)" id="pver">-</div><div class="stat-l">Verified</div></div>
+        <div class="stat"><div class="stat-v" style="color:var(--purple)">11</div><div class="stat-l">Pipelines</div></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><div class="card-t">⚡ Secret Hunting Pipelines</div><button class="btn btn-p btn-s" onclick="run('full_scan')">▶ RUN FULL SCAN</button></div>
+        <div class="pgrid" id="pgrid"></div>
+      </div>
+      <!-- Results panel -->
+      <div class="card" id="rCard" style="display:none">
+        <div class="card-h">
+          <div class="card-t" id="rTitle">Results</div>
+          <div>
+            <span id="rStatus"></span>
+            <button class="btn btn-s" onclick="document.getElementById('rCard').style.display='none'">Close</button>
+          </div>
+        </div>
+        <div class="r-out" id="rOut"></div>
+      </div>
+    </div>
+
+    <!-- RECON -->
+    <div class="pane" id="p-recon">
+      <div class="card">
+        <div class="card-h"><div class="card-t">🔍 Reconnaissance & Vulnerability Scanning</div></div>
+        <div class="igrp">
+          <input type="text" id="rtgt" placeholder="Target (IP, domain, or GitHub repo URL)">
+          <button class="btn btn-p" onclick="run('recon_full',getT())">▶ FULL RECON</button>
+        </div>
+        <div class="pgrid">
+          <div class="pcard" onclick="run('subfinder',getT())"><div class="pn">🌐 Subdomain Enum</div><div class="pd">crt.sh + HackerTarget + RapidDNS. Free subdomain discovery.</div><span class="pc c-recon">recon</span></div>
+          <div class="pcard" onclick="run('nuclei_scan',getT())"><div class="pn">🐛 Security Scan</div><div class="pd">HTTP security headers, exposed .env/.git, admin panels, version disclosure.</div><span class="pc c-recon">recon</span></div>
+          <div class="pcard" onclick="run('nmap',getT())"><div class="pn">🔌 Port Scan</div><div class="pd">Checks common ports (80,443,8080,22,3306,6379...) + Shodan cross-ref.</div><span class="pc c-recon">recon</span></div>
+          <div class="pcard" onclick="run('shodan_scan',getT())"><div class="pn">📡 Shodan Lookup</div><div class="pd">Shodan InternetDB — exposed ports, services, vulns, CPEs. Free, no key.</div><span class="pc c-recon">recon</span></div>
+          <div class="pcard" onclick="run('trufflehog',getT())"><div class="pn">🔑 Git Secret Scanner</div><div class="pd">Scans a GitHub repo for secrets: AWS, GitHub, Stripe, Slack, OpenAI, JWT, private keys.</div><span class="pc c-recon">recon</span></div>
+          <div class="pcard" onclick="run('google_dorker',getT())"><div class="pn">🔎 Google Dorker</div><div class="pd">15+ Google dork queries to find exposed files, configs, and secrets.</div><span class="pc c-recon">recon</span></div>
+        </div>
+      </div>
+      <div class="card" id="rCard2" style="display:none">
+        <div class="card-h">
+          <div class="card-t" id="rTitle2">Results</div>
+          <div>
+            <span id="rStatus2"></span>
+            <button class="btn btn-s" onclick="document.getElementById('rCard2').style.display='none'">Close</button>
+          </div>
+        </div>
+        <div class="r-out" id="rOut2"></div>
+      </div>
+    </div>
+
+    <!-- CONSOLE -->
+    <div class="pane" id="p-con">
+      <div class="card">
+        <div class="card-h">
+          <div class="card-t">📋 Execution Console</div>
+          <button class="btn btn-s btn-d" onclick="document.getElementById('conout').innerHTML='<div class=\'cl dim\'>[SYSTEM] Console cleared.</div>'">Clear</button>
+        </div>
+        <div class="con" id="conout">
+          <div class="cl dim">[SYSTEM] Elara SecOps v4.1 — Standalone Mode</div>
+          <div class="cl dim">[SYSTEM] All pipelines run in Deno. No sandbox. No cost.</div>
+          <div class="cl dim">[SYSTEM] APIs: Shodan InternetDB, crt.sh, HackerTarget, GitHub, Pastebin</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="ovl" id="modal"><div class="mdl"><span class="mdl-x" onclick="document.getElementById('modal').classList.remove('on')">×</span><div class="mdl-t" id="mt"></div><div id="mc"></div></div></div>
+
+<script>
+
+const API="https://elara-6512927d.base44.app/functions/runPipeline";
+const DATA="https://base44.app/api/apps/6a6cf5052818d1c56512927d/files/mp/public/6a6cf5052818d1c56512927d/368abbfc5_dashboard_data.json";
+let F=[],S={};
+
+const PIPES=[
+  {n:"oops_scanner",d:"Deleted commits scanner — finds force-pushed commits GitHub keeps forever. Returns GH Archive URL + methodology.",c:"c-sh"},
+  {n:"code_dorker",d:"15 GitHub code search patterns: AKIA, sk-, sk_live_, xoxb-, ghp_ and more. Generates clickable search URLs.",c:"c-sh"},
+  {n:"paste_monitor",d:"Monitors Pastebin archive for recent paste URLs. Targets crypto, telco, social media patterns.",c:"c-sh"},
+  {n:"google_dorker",d:"15+ Google dork queries to find exposed .env files, config files, API keys indexed by search engines.",c:"c-sh"},
+  {n:"full_scan",d:"Runs all secret hunting pipelines simultaneously. Maximum coverage scan.",c:"c-all"},
+  {n:"shodan_scan",d:"Shodan InternetDB — exposed ports, services, vulns, CPEs. Free, no API key needed.",c:"c-recon"},
+  {n:"subfinder",d:"Subdomain enumeration via crt.sh + HackerTarget + RapidDNS. 3 sources for maximum coverage.",c:"c-recon"},
+  {n:"nuclei_scan",d:"HTTP security audit: security headers, exposed .env/.git, admin panels, robots.txt, version disclosure.",c:"c-recon"},
+  {n:"nmap",d:"Port scan of common ports (80,443,8080,22,3306,6379,27017...) + Shodan cross-reference.",c:"c-recon"},
+  {n:"trufflehog",d:"Scans a GitHub repo for secrets: AWS, GitHub, Stripe, Slack, OpenAI, JWT, MongoDB URIs, private keys.",c:"c-recon"},
+  {n:"recon_full",d:"Full recon suite: Shodan + subdomain enum + security scan + port scan against a single target.",c:"c-all"},
+];
+
+function tab(e,t){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));document.querySelectorAll('.pane').forEach(x=>x.classList.remove('on'));e.target.closest('.tab').classList.add('on');document.getElementById('p-'+t).classList.add('on')}
+function getT(){return document.getElementById('rtgt').value}
+function log(tag,msg,type='dim'){const ts=new Date().toLocaleTimeString();const l=document.createElement('div');l.className='cl '+type;l.textContent=`[${ts}] [${tag}] ${msg}`;document.getElementById('conout').appendChild(l);document.getElementById('conout').scrollTop=99999}
+
+function init(){renderP();loadData();checkServer();log('SYSTEM','Dashboard initialized.','ok');setInterval(loadData,300000)}
+
+async function checkServer(){
+  try{
+    const r=await fetch(API,{method:'GET'});
+    const d=await r.json();
+    if(d.status==='online'){document.getElementById('srvStatus').textContent='● v'+d.version;log('SERVER','Pipeline engine online: v'+d.version,'ok')}
+  }catch(e){document.getElementById('srvStatus').textContent='● OFFLINE';document.getElementById('srvStatus').style.background='rgba(255,71,87,.2)';document.getElementById('srvStatus').style.color='var(--red)';log('SERVER','Engine offline','err')}
+}
+
+async function loadData(){
+  try{
+    const r=await fetch(DATA+'?t='+Date.now());
+    const d=await r.json();
+    F=d.findings||[];S=d.stats||{};
+    updStats();renderF();
+    log('DATA','Loaded '+F.length+' findings','ok');
+  }catch(e){log('DATA','Load failed: '+e.message,'err')}
+}
+
+function updStats(){
+  document.getElementById('fstats').innerHTML=
+    '<div class="stat"><div class="stat-v" style="color:var(--accent)">'+(S.total||0)+'</div><div class="stat-l">Total</div></div>'+
+    '<div class="stat"><div class="stat-v" style="color:var(--red)">'+(S.critical||0)+'</div><div class="stat-l">Critical</div></div>'+
+    '<div class="stat"><div class="stat-v" style="color:var(--orange)">'+(S.high||0)+'</div><div class="stat-l">High</div></div>'+
+    '<div class="stat"><div class="stat-v" style="color:var(--blue)">'+(S.verified||0)+'</div><div class="stat-l">Verified</div></div>'+
+    '<div class="stat"><div class="stat-v" style="color:var(--purple)">'+(S.medium||0)+'</div><div class="stat-l">Medium</div></div>';
+  document.getElementById('ptot').textContent=S.total||0;
+  document.getElementById('pchi').textContent=(S.critical||0)+(S.high||0);
+  document.getElementById('pver').textContent=S.verified||0;
+}
+
+function renderF(){
+  const sv=document.getElementById('fsev').value,sr=document.getElementById('fsrch').value.toLowerCase();
+  let f=F.filter(x=>{if(sv&&x.severity!==sv)return false;if(sr){const t=(x.repo+' '+x.secretType+' '+x.notes+' '+x.actor).toLowerCase();if(!t.includes(sr))return false}return true});
+  document.getElementById('fcount').textContent=f.length+' of '+F.length+' findings';
+  document.getElementById('fbody').innerHTML=f.map(x=>{
+    const sc=x.severity?'s-'+x.severity:'s-low';
+    const dt=x.date?new Date(x.date).toLocaleDateString():'-';
+    return '<tr><td><span class="sev '+sc+'">'+(x.severity||'low').toUpperCase()+'</span></td><td>'+(x.secretType||'-')+'</td><td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(x.repo||'-')+'</td><td style="font-size:11px;color:var(--dim)">'+(x.scanMethod||'-')+'</td><td>'+(x.verified?'✅':'❌')+'</td><td style="font-size:11px;color:var(--dim)">'+dt+'</td><td><button class="btn btn-s" onclick="detail(\''+x.id+'\')">Details</button></td></tr>'
+  }).join('');
+}
+
+function detail(id){
+  const f=F.find(x=>x.id===id);if(!f)return;
+  document.getElementById('mt').textContent=f.secretType||'Finding';
+  document.getElementById('mc').innerHTML=
+    '<div class="ms"><h4>Severity</h4><span class="sev s-'+(f.severity||'low')+'">'+(f.severity||'low').toUpperCase()+'</span></div>'+
+    '<div class="ms"><h4>Repository</h4><p>'+(f.repo||'-')+'</p></div>'+
+    '<div class="ms"><h4>Actor</h4><p>'+(f.actor||'-')+'</p></div>'+
+    '<div class="ms"><h4>Commit URL</h4><p><a href="'+(f.commitUrl||'#')+'" target="_blank" style="color:var(--blue)">'+(f.commitUrl||'-')+'</a></p></div>'+
+    '<div class="ms"><h4>Secret Value (Unredacted)</h4><div class="secret">'+esc(f.rawSnippet||'N/A')+'</div></div>'+
+    '<div class="ms"><h4>Secret Type / Detector</h4><p>'+(f.secretType||'-')+' / '+(f.detector||'-')+'</p></div>'+
+    '<div class="ms"><h4>Verified</h4><p>'+(f.verified?'✅ Yes — TruffleHog confirmed':'❌ Not verified')+'</p></div>'+
+    '<div class="ms"><h4>Date</h4><p>'+(f.date||'-')+'</p></div>'+
+    '<div class="ms"><h4>Notes / Method of Use / Impact / Disclosure Target</h4><p style="white-space:pre-wrap">'+esc(f.notes||'No notes.')+'</p></div>';
+  document.getElementById('modal').classList.add('on');
+}
+
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+function exportF(){
+  const h=['Severity','Secret Type','Repository','Actor','Verified','Method','Date','Notes','Commit URL','Raw Snippet'];
+  const r=F.map(f=>[f.severity,f.secretType,f.repo,f.actor,f.verified,f.scanMethod,f.date,f.notes,f.commitUrl,f.rawSnippet]);
+  const csv=[h,...r].map(r=>r.map(c=>`"${(c||'').toString().replace(/"/g,'""')}"`).join(',')).join('\n');
+  const b=new Blob([csv],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='findings.csv';a.click();
+}
+
+function renderP(){document.getElementById('pgrid').innerHTML=PIPES.map(p=>'<div class="pcard" onclick="run(\''+p.n+'\')"><div class="pn">'+p.n.replace(/_/g,' ')+'</div><div class="pd">'+p.d+'</div><span class="pc '+p.c+'">'+p.c.replace('c-','')+'</span></div>').join('')}
+
+async function run(name,target){
+  const hasTarget = name==='shodan_scan'||name==='subfinder'||name==='nuclei_scan'||name==='nmap'||name==='trufflehog'||name==='recon_full'||name==='google_dorker';
+  if(hasTarget && !target){target=prompt('Enter target (IP, domain, or GitHub repo URL):');if(!target)return}
+  log('PIPELINE','Starting '+name+(target?' → '+target:'')+'...','i');
+  // Show results panel
+  const isPipes = document.getElementById('p-pipes').classList.contains('on');
+  const rCard = isPipes?document.getElementById('rCard'):document.getElementById('rCard2');
+  const rTitle = isPipes?document.getElementById('rTitle'):document.getElementById('rTitle2');
+  const rOut = isPipes?document.getElementById('rOut'):document.getElementById('rOut2');
+  const rStatus = isPipes?document.getElementById('rStatus'):document.getElementById('rStatus2');
+  rCard.style.display='block';
+  rTitle.textContent=name.replace(/_/g,' ');
+  rStatus.innerHTML='<span class="spinner"></span> Running...';
+  rOut.innerHTML='<div class="dim">Executing pipeline...</div>';
+
+  try{
+    const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pipeline:name,target:target})});
+    const d=await r.json();
+    if(d.status==='complete'){
+      rStatus.innerHTML='<span style="color:var(--accent)">✓ Complete</span>';
+      log('PIPELINE',name+' COMPLETE','ok');
+      // Format output
+      const out=d.result||d;
+      rOut.innerHTML=formatResult(out,name,target);
+    } else if(d.status==='error'){
+      rStatus.innerHTML='<span style="color:var(--red)">✗ Error</span>';
+      rOut.innerHTML='<div class="crit">ERROR: '+esc(d.error||'unknown error')+'</div>';
+      log('PIPELINE',name+' ERROR: '+d.error,'err');
+    } else {
+      rStatus.innerHTML='<span style="color:var(--orange)">Unknown</span>';
+      rOut.innerHTML='<pre>'+esc(JSON.stringify(d,null,2))+'</pre>';
+    }
+  }catch(e){
+    rStatus.innerHTML='<span style="color:var(--red)">✗ Failed</span>';
+    rOut.innerHTML='<div class="crit">Failed: '+esc(e.message)+'</div>';
+    log('PIPELINE',name+' FAILED: '+e.message,'err');
+  }
+}
+
+function formatResult(result,name,target){
+  if(result.error) return '<div class="crit">ERROR: '+esc(result.error)+'</div>';
+
+  let html='';
+
+  // Summary
+  if(result.summary) html += '<div class="dim">— Summary —</div><div>'+esc(result.summary)+'</div><br>';
+
+  // Shodan
+  if(result.ports) html += '<div class="info">Ports: '+(result.ports||[]).join(', ')+'</div>';
+  if(result.hostnames) html += '<div class="info">Hostnames: '+(result.hostnames||[]).join(', ')+'</div>';
+  if(result.vulns && result.vulns.length) html += '<div class="crit">Vulns: '+result.vulns.join(', ')+'</div>';
+
+  // Subdomains
+  if(result.subdomains && result.subdomains.length) {
+    html += '<div class="info">Subdomains ('+result.subdomains.length+'):</div>';
+    html += '<div class="dim">'+esc(result.subdomains.join('\n'))+'</div>';
+  }
+
+  // Nuclei checks
+  if(result.checks) {
+    for(const c of result.checks) {
+      const r = typeof c.result==='string'?c.result:JSON.stringify(c.result,null,2);
+      const cls = r.includes('CRITICAL')?'crit':r.includes('Missing')||r.includes('disclosed')||r.includes('Found')?'warn':r.includes('Not exposed')||r.includes('Not found')||r.includes('No ')?'ok':'info';
+      html += '<div class="'+cls+'">['+esc(c.check)+'] '+esc(r)+'</div>';
+    }
+  }
+
+  // Port scan
+  if(result.openPorts) {
+    for(const p of result.openPorts) {
+      const s = p.status?'HTTP '+p.status:p.shodan?'Shodan':'';
+      html += '<div class="info">'+p.port+'/tcp — '+esc(p.service)+' '+(s?'('+s+')':'')+'</div>';
+    }
+    if(!result.openPorts.length) html += '<div class="dim">No open ports detected</div>';
+  }
+
+  // Trufflehog findings
+  if(result.findings) {
+    if(result.findings.length) {
+      html += '<div class="dim">Files scanned: '+(result.filesScanned||0)+'</div>';
+      for(const f of result.findings) {
+        html += '<div class="crit">['+esc(f.type)+'] '+esc(f.file)+': '+esc(f.value)+'</div>';
+        html += '<div class="secret">'+esc(f.fullValue)+'</div><br>';
+      }
+    } else {
+      html += '<div class="ok">No secrets found in '+(result.filesScanned||0)+' files</div>';
+    }
+  }
+
+  // Google dorks
+  if(result.googleUrls) {
+    html += '<div class="info">Google Dork URLs ('+result.googleUrls.length+'):</div>';
+    for(let i=0;i<result.googleUrls.length;i++) {
+      html += '<div><a href="'+result.googleUrls[i]+'" target="_blank" style="color:var(--blue)">'+(i+1)+'. '+esc(result.dorks[i])+'</a></div>';
+    }
+  }
+
+  // Code dorker
+  if(result.patterns) {
+    html += '<div class="info">GitHub Code Search URLs ('+result.patterns.length+'):</div>';
+    for(const p of result.patterns) {
+      html += '<div><a href="'+p.githubUrl+'" target="_blank" style="color:var(--blue)">Search: '+esc(p.query)+'</a></div>';
+    }
+  }
+
+  // Paste monitor
+  if(result.findings && name==='paste_monitor') {
+    for(const f of result.findings) {
+      if(f.pasteCount) html += '<div class="warn">'+esc(f.site)+': '+f.pasteCount+' recent pastes</div>';
+      else if(f.error) html += '<div class="dim">'+esc(f.site)+': '+esc(f.error)+'</div>';
+    }
+  }
+
+  // Full scan results
+  if(result.results && !result.checks) {
+    for(const [k,v] of Object.entries(result.results)) {
+      html += '<div class="info">— '+esc(k)+' —</div>';
+      if(v.summary) html += '<div class="dim">'+esc(v.summary)+'</div>';
+      else if(v.error) html += '<div class="crit">Error: '+esc(v.error)+'</div>';
+      html += '<br>';
+    }
+  }
+
+  // Fallback: raw JSON
+  if(!html) html = '<pre>'+esc(JSON.stringify(result,null,2))+'</pre>';
+
+  return html;
+}
+
+function refresh(){loadData();document.getElementById('lr').textContent='Last: '+new Date().toLocaleTimeString();log('SYSTEM','Refreshed.','i')}
+document.getElementById('modal').addEventListener('click',e=>{if(e.target.id==='modal')document.getElementById('modal').classList.remove('on')});
+init();
+</script>
+</body>
+</html>

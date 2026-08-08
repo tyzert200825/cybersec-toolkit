@@ -8,7 +8,7 @@ import json, os, subprocess, threading, time, http.server, socketserver, sys
 from urllib.parse import urlparse, parse_qs
 
 PORT = 9191
-ADMIN_KEY = "Fuckyou25.!"
+ADMIN_KEY = "admin"
 WORK_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # ===== Results storage =====
